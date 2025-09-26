@@ -33,10 +33,9 @@ public class User implements UserDetails {
 
     @Email
     @NotBlank
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
-    //    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,20}$", message = "Password must be 8-20 characters, include uppercase, lowercase, digit, and special character.")
     private String password;
 
     @ManyToMany(fetch = FetchType.LAZY)
