@@ -23,7 +23,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User implements UserDetails {
-
     @Id
     @GeneratedValue
     private UUID id;

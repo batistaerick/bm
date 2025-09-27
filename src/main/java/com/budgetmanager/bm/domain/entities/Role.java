@@ -19,7 +19,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Role implements GrantedAuthority {
-
     @Id
     @GeneratedValue
     private UUID id;
