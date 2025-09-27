@@ -38,7 +38,7 @@ public class AuthService {
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new GlobalException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
-        return jwtUtil.generateAccessToken(email);
+        return jwtUtil.generateAccessToken(email, user.getRoles().stream().map(role -> role.getRoleName().toString()).toList());
     }
 
     public RefreshToken createRefreshToken(User user) {

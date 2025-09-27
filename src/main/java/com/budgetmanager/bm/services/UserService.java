@@ -34,7 +34,7 @@ public class UserService {
         }
         User user = UserConverter.dtoToEntity(userDto);
 
-        user.setRoles(Collections.singleton(roleService.findByRoleName(UserRole.USER)));
+        user.setRoles(Collections.singleton(roleService.findByRoleName(UserRole.ROLE_USER)));
         user.setPassword(encoder.encode(user.getPassword()));
 
         return repository.save(user);
@@ -54,9 +54,5 @@ public class UserService {
                     id
                 )
             );
-    }
-
-    public boolean existsByEmail(String email) {
-        return repository.existsByEmail(email);
     }
 }

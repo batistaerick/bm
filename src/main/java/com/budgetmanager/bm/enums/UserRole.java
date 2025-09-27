@@ -1,6 +1,6 @@
 package com.budgetmanager.bm.enums;
 
 public enum UserRole {
-    ADMIN,
-    USER
+    ROLE_ADMIN,
+    ROLE_USER
 }

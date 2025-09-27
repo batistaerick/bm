@@ -82,7 +82,7 @@ public class AuthController {
         }
         RefreshToken newRefreshToken = authService.rotateRefreshToken(refreshToken);
         User user = newRefreshToken.getUser();
-        String newAccess = jwtUtil.generateAccessToken(user.getUsername());
+        String newAccess = jwtUtil.generateAccessToken(user.getUsername(), user.getRoles().stream().map(role -> role.getRoleName().toString()).toList());
 
         cookieHelper(response, new Cookie(REFRESH_COOKIE_NAME, newRefreshToken.getToken()), refreshExpiration);
         cookieHelper(response, new Cookie(ACCESS_COOKIE_NAME, newAccess), accessExpiration);

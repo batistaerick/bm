@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtUtil {
@@ -15,13 +16,14 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(String username, List<String> roles) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + accessExpiration);
 
         return JWT
             .create()
             .withSubject(username)
+            .withClaim("roles", roles)
             .withIssuedAt(now)
             .withExpiresAt(expiration)
             .sign(Algorithm.HMAC256(secret.getBytes()));
