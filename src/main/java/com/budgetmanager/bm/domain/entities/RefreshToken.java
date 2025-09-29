@@ -1,12 +1,11 @@
 package com.budgetmanager.bm.domain.entities;
 
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Table(name = "t_refresh_token")
 @Entity
@@ -16,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RefreshToken {
+
     @Id
     @GeneratedValue
     private UUID id;

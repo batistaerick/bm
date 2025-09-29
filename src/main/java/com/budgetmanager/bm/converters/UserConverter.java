@@ -4,18 +4,17 @@ import com.budgetmanager.bm.domain.dtos.RoleDto;
 import com.budgetmanager.bm.domain.dtos.UserDto;
 import com.budgetmanager.bm.domain.entities.Role;
 import com.budgetmanager.bm.domain.entities.User;
-
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class UserConverter {
+
     private UserConverter() {
         throw new IllegalStateException("Utility class");
     }
 
     public static UserDto entityToDto(User entity) {
-        return UserDto
-            .builder()
+        return UserDto.builder()
             .id(entity.getId())
             .email(entity.getEmail())
             .name(entity.getName())
@@ -24,8 +23,7 @@ public class UserConverter {
     }
 
     public static User dtoToEntity(UserDto dto) {
-        return User
-            .builder()
+        return User.builder()
             .id(dto.id())
             .email(dto.email())
             .name(dto.name())

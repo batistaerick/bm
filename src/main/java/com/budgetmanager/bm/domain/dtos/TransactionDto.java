@@ -1,22 +1,25 @@
 package com.budgetmanager.bm.domain.dtos;
 
 import com.budgetmanager.bm.enums.RepeatInterval;
-import lombok.Builder;
-
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder
 public record TransactionDto(
     UUID id,
-    UserDto userDto,
     CategoryDto categoryDto,
     String notes,
     BigDecimal totalValue,
-    Integer installments,
+    @Max(value = 500, message = "Value cannot exceed 500")
+    @Min(value = 2, message = "Minimum value of 0")
+    Integer installmentNumbers,
+    List<InstallmentDto> installments,
     RepeatInterval repeats,
-    Instant startDate,
-    Instant endDate
-) {
-}
+    LocalDate startDate,
+    LocalDate endDate
+) {}

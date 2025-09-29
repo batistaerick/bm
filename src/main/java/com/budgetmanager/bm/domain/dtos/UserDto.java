@@ -1,9 +1,8 @@
 package com.budgetmanager.bm.domain.dtos;
 
-import lombok.Builder;
-
 import java.util.Set;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder
 public record UserDto(
@@ -12,5 +11,4 @@ public record UserDto(
     String email,
     String password,
     Set<RoleDto> rolesDto
-) {
-}
+) {}

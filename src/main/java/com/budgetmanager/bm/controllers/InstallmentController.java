@@ -9,5 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/installments")
 @RequiredArgsConstructor
 public class InstallmentController {
+
     private final InstallmentService service;
 }

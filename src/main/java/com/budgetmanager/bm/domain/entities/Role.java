@@ -3,13 +3,12 @@ package com.budgetmanager.bm.domain.entities;
 import com.budgetmanager.bm.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Table(name = "t_role")
 @Entity
@@ -19,6 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Role implements GrantedAuthority {
+
     @Id
     @GeneratedValue
     private UUID id;

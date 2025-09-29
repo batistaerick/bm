@@ -6,35 +6,46 @@ import com.budgetmanager.bm.domain.entities.User;
 import com.budgetmanager.bm.enums.UserRole;
 import com.budgetmanager.bm.exceptions.GlobalException;
 import com.budgetmanager.bm.repositories.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
     private final UserRepository repository;
     private final PasswordEncoder encoder;
     private final RoleService roleService;
 
     public User save(UserDto userDto) {
         if (
-            !Pattern
-                .compile("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&.])[A-Za-z\\d@$!%*?&.]{8,20}$")
+            !Pattern.compile(
+                "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&.])[A-Za-z\\d@$!%*?&.]{8,20}$"
+            )
                 .matcher(userDto.password())
                 .matches()
         ) {
-            throw new GlobalException(HttpStatus.BAD_REQUEST, "Password must be 8-20 characters, include uppercase, lowercase, digit, and special character");
+            throw new GlobalException(
+                HttpStatus.BAD_REQUEST,
+                "Password must be 8-20 characters, include uppercase, lowercase, digit, and special character"
+            );
         }
         User user = UserConverter.dtoToEntity(userDto);
 
-        user.setRoles(Collections.singleton(roleService.findByRoleName(UserRole.ROLE_USER)));
+        user.setRoles(
+            Collections.singleton(
+                roleService.findByRoleName(UserRole.ROLE_USER)
+            )
+        );
         user.setPassword(encoder.encode(user.getPassword()));
 
         return repository.save(user);
@@ -47,12 +58,26 @@ public class UserService {
     public User findById(UUID id) {
         return repository
             .findById(id)
-            .orElseThrow(
-                () -> new GlobalException(
+            .orElseThrow(() ->
+                new GlobalException(
                     HttpStatus.NOT_FOUND,
                     "User not found for {}",
                     id
                 )
             );
+    }
+
+    public Optional<User> getCurrentUser() {
+        return repository.findByEmail(getCurrentUsername());
+    }
+
+    public String getCurrentUsername() {
+        Authentication auth =
+            SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new UsernameNotFoundException("User not authenticated");
+        }
+        return auth.getName();
     }
 }

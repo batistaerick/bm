@@ -6,5 +6,4 @@ public record ErrorResponseBody(
     HttpStatus status,
     String title,
     String message
-) {
-}
+) {}

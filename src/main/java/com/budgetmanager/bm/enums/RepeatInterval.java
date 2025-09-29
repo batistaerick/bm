@@ -5,5 +5,5 @@ public enum RepeatInterval {
     WEEKLY,
     MONTHLY,
     YEARLY,
-    NONE
+    NONE,
 }

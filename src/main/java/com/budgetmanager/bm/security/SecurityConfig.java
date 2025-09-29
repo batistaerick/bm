@@ -1,5 +1,7 @@
 package com.budgetmanager.bm.security;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,12 +17,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
     private final JwtAuthFilter jwtAuthFilter;
 
     @Value("${cors.frontend}")
@@ -45,8 +46,8 @@ public class SecurityConfig {
         return http
             .cors(withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(
-                authorization -> authorization
+            .authorizeHttpRequests(authorization ->
+                authorization
                     .requestMatchers("/auth/login")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/users")
@@ -54,7 +55,10 @@ public class SecurityConfig {
                     .anyRequest()
                     .authenticated()
             )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(
+                jwtAuthFilter,
+                UsernamePasswordAuthenticationFilter.class
+            )
             .build();
     }
 

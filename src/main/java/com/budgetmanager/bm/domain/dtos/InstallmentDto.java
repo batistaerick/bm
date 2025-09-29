@@ -1,10 +1,9 @@
 package com.budgetmanager.bm.domain.dtos;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder
 public record InstallmentDto(
@@ -13,6 +12,5 @@ public record InstallmentDto(
     Integer installmentNumber,
     Integer totalInstallments,
     BigDecimal amount,
-    Instant dueDate
-) {
-}
+    LocalDate dueDate
+) {}

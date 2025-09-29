@@ -4,18 +4,18 @@ import com.budgetmanager.bm.domain.entities.RefreshToken;
 import com.budgetmanager.bm.domain.entities.User;
 import com.budgetmanager.bm.exceptions.GlobalException;
 import com.budgetmanager.bm.security.JwtUtil;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -27,8 +27,8 @@ public class AuthService {
     public String loginAndCreateAccessToken(String email, String password) {
         User user = userService
             .findByEmail(email)
-            .orElseThrow(
-                () -> new GlobalException(
+            .orElseThrow(() ->
+                new GlobalException(
                     HttpStatus.NOT_FOUND,
                     "User not found for {}",
                     email
@@ -36,16 +36,25 @@ public class AuthService {
             );
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new GlobalException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+            throw new GlobalException(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid credentials"
+            );
         }
-        return jwtUtil.generateAccessToken(email, user.getRoles().stream().map(role -> role.getRoleName().toString()).toList());
+        return jwtUtil.generateAccessToken(
+            email,
+            user
+                .getRoles()
+                .stream()
+                .map(role -> role.getRoleName().toString())
+                .toList()
+        );
     }
 
     public RefreshToken createRefreshToken(User user) {
         refreshTokenService.deleteByUser(user);
 
-        RefreshToken refreshToken = RefreshToken
-            .builder()
+        RefreshToken refreshToken = RefreshToken.builder()
             .token(UUID.randomUUID() + "-" + UUID.randomUUID())
             .user(user)
             .expiryDate(Instant.now().plusMillis(refreshExpiration))
@@ -57,10 +66,8 @@ public class AuthService {
     public boolean validateRefreshToken(String token) {
         return refreshTokenService
             .findByToken(token)
-            .map(
-                refreshToken -> refreshToken
-                    .getExpiryDate()
-                    .isAfter(Instant.now())
+            .map(refreshToken ->
+                refreshToken.getExpiryDate().isAfter(Instant.now())
             )
             .orElse(false);
     }
@@ -68,7 +75,12 @@ public class AuthService {
     public RefreshToken rotateRefreshToken(String oldToken) {
         RefreshToken refreshToken = refreshTokenService
             .findByToken(oldToken)
-            .orElseThrow(() -> new GlobalException(HttpStatus.UNAUTHORIZED, "Invalid refresh token"));
+            .orElseThrow(() ->
+                new GlobalException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid refresh token"
+                )
+            );
 
         refreshToken.setToken(UUID.randomUUID() + "-" + UUID.randomUUID());
         refreshToken.setExpiryDate(Instant.now().plusMillis(refreshExpiration));

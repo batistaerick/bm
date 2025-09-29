@@ -2,14 +2,17 @@ package com.budgetmanager.bm.domain.entities;
 
 import com.budgetmanager.bm.enums.RepeatInterval;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
 
 @Table(name = "t_transaction")
 @Entity
@@ -19,6 +22,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Transaction {
+
     @Id
     @GeneratedValue
     private UUID id;
@@ -37,15 +41,24 @@ public class Transaction {
     @NotNull
     private BigDecimal totalValue;
 
-    private Integer installments;
+    @Max(value = 500, message = "Value cannot exceed 500")
+    @Min(value = 2, message = "Minimum value of 0")
+    private Integer installmentNumbers;
+
+    @OneToMany(
+        mappedBy = "transaction",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
+    private List<Installment> installments;
 
     @Enumerated(EnumType.STRING)
     private RepeatInterval repeats;
 
     @NotNull
-    private Instant startDate;
+    private LocalDate startDate;
 
-    private Instant endDate;
+    private LocalDate endDate;
 
     @CreationTimestamp
     @Column(updatable = false)

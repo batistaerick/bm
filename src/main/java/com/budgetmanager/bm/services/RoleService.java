@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class RoleService {
+
     private final RoleRepository repository;
 
     public Role save(RoleDto roleDto) {
@@ -23,8 +24,8 @@ public class RoleService {
     public Role findByRoleName(UserRole userRole) {
         return repository
             .findByRoleName(userRole)
-            .orElseThrow(
-                () -> new GlobalException(
+            .orElseThrow(() ->
+                new GlobalException(
                     HttpStatus.NOT_FOUND,
                     "Role not found for {}",
                     userRole
