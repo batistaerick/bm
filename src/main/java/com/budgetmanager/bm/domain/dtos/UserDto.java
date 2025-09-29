@@ -10,5 +10,5 @@ public record UserDto(
     String name,
     String email,
     String password,
-    Set<RoleDto> rolesDto
+    Set<RoleDto> roles
 ) {}

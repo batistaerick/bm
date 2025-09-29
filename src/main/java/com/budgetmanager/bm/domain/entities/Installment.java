@@ -1,5 +1,7 @@
 package com.budgetmanager.bm.domain.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -25,6 +27,7 @@ public class Installment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_id", nullable = false)
+    @JsonBackReference
     private Transaction transaction;
 
     @NotNull
@@ -37,6 +40,7 @@ public class Installment {
     private BigDecimal amount;
 
     @NotNull
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate dueDate;
 
     @CreationTimestamp

@@ -2,6 +2,8 @@ package com.budgetmanager.bm.converters;
 
 import com.budgetmanager.bm.domain.dtos.TransactionDto;
 import com.budgetmanager.bm.domain.entities.Transaction;
+import java.util.List;
+import java.util.Optional;
 
 public class TransactionConverter {
 
@@ -14,14 +16,13 @@ public class TransactionConverter {
             .id(entity.getId())
             .notes(entity.getNotes())
             .repeats(entity.getRepeats())
-            .endDate(entity.getEndDate())
-            .startDate(entity.getStartDate())
+            .date(entity.getDate())
             .totalValue(entity.getTotalValue())
             .installmentNumbers(entity.getInstallmentNumbers())
-            .categoryDto(CategoryConverter.entityToDto(entity.getCategory()))
+            .category(CategoryConverter.entityToDto(entity.getCategory()))
             .installments(
-                entity
-                    .getInstallments()
+                Optional.ofNullable(entity.getInstallments())
+                    .orElse(List.of())
                     .stream()
                     .map(InstallmentConverter::entityToDto)
                     .toList()
@@ -34,14 +35,13 @@ public class TransactionConverter {
             .id(dto.id())
             .notes(dto.notes())
             .repeats(dto.repeats())
-            .endDate(dto.endDate())
-            .startDate(dto.startDate())
+            .date(dto.date())
             .totalValue(dto.totalValue())
             .installmentNumbers(dto.installmentNumbers())
-            .category(CategoryConverter.dtoToEntity(dto.categoryDto()))
+            .category(CategoryConverter.dtoToEntity(dto.category()))
             .installments(
-                dto
-                    .installments()
+                Optional.ofNullable(dto.installments())
+                    .orElse(List.of())
                     .stream()
                     .map(InstallmentConverter::dtoToEntity)
                     .toList()

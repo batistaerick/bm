@@ -1,6 +1,8 @@
 package com.budgetmanager.bm.domain.entities;
 
 import com.budgetmanager.bm.enums.RepeatInterval;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -48,17 +50,18 @@ public class Transaction {
     @OneToMany(
         mappedBy = "transaction",
         cascade = CascadeType.ALL,
-        orphanRemoval = true
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
     )
+    @JsonManagedReference
     private List<Installment> installments;
 
     @Enumerated(EnumType.STRING)
     private RepeatInterval repeats;
 
     @NotNull
-    private LocalDate startDate;
-
-    private LocalDate endDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    private LocalDate date;
 
     @CreationTimestamp
     @Column(updatable = false)

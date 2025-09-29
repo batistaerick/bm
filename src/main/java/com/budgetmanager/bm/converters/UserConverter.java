@@ -18,7 +18,7 @@ public class UserConverter {
             .id(entity.getId())
             .email(entity.getEmail())
             .name(entity.getName())
-            .rolesDto(checkRoles(entity))
+            .roles(checkRoles(entity))
             .build();
     }
 
@@ -33,9 +33,9 @@ public class UserConverter {
     }
 
     public static Set<Role> checkRoles(UserDto dto) {
-        if (dto.rolesDto() != null) {
+        if (dto.roles() != null) {
             return dto
-                .rolesDto()
+                .roles()
                 .stream()
                 .map(RoleConverter::dtoToEntity)
                 .collect(Collectors.toSet());

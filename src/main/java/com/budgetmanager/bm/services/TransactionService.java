@@ -6,15 +6,14 @@ import com.budgetmanager.bm.domain.entities.Installment;
 import com.budgetmanager.bm.domain.entities.Transaction;
 import com.budgetmanager.bm.domain.entities.User;
 import com.budgetmanager.bm.repositories.TransactionRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +24,7 @@ public class TransactionService {
     private final UserService userService;
 
     @Transactional
-    public Transaction save(TransactionDto dto) {
+    public TransactionDto save(TransactionDto dto) {
         User user = userService
             .getCurrentUser()
             .orElseThrow(() -> new UsernameNotFoundException("User Not Found"));
@@ -34,10 +33,10 @@ public class TransactionService {
         newTransaction.setUser(user);
         newTransaction = repository.save(newTransaction);
 
-        if (dto.installmentNumbers() == null) {
+        if (dto.installmentNumbers() != null) {
             handleInstallments(newTransaction);
         }
-        return newTransaction;
+        return TransactionConverter.entityToDto(newTransaction);
     }
 
     public void handleInstallments(Transaction transaction) {
@@ -51,7 +50,7 @@ public class TransactionService {
                     .installmentNumber(i)
                     .totalInstallments(transaction.getInstallmentNumbers())
                     .amount(installmentAmount)
-                    .dueDate(transaction.getStartDate().plusMonths(i - 1))
+                    .dueDate(transaction.getDate().plusMonths(i - 1))
                     .build()
             );
         }
