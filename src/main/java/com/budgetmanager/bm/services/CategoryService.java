@@ -5,12 +5,11 @@ import com.budgetmanager.bm.domain.dtos.CategoryDto;
 import com.budgetmanager.bm.domain.entities.Category;
 import com.budgetmanager.bm.enums.TransactionType;
 import com.budgetmanager.bm.repositories.CategoryRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +21,9 @@ public class CategoryService {
         return repository.save(CategoryConverter.dtoToEntity(dto));
     }
 
-    public List<Category> findByTransactionType(TransactionType transactionType) {
+    public List<Category> findByTransactionType(
+        TransactionType transactionType
+    ) {
         return repository.findByTransactionType(transactionType);
     }
 

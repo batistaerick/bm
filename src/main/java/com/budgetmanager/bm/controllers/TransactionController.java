@@ -3,13 +3,13 @@ package com.budgetmanager.bm.controllers;
 import static org.springframework.http.ResponseEntity.ok;
 
 import com.budgetmanager.bm.domain.dtos.TransactionDto;
+import com.budgetmanager.bm.domain.entities.Transaction;
+import com.budgetmanager.bm.enums.TransactionType;
 import com.budgetmanager.bm.services.TransactionService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/transactions")
@@ -23,5 +23,12 @@ public class TransactionController {
         @RequestBody TransactionDto dto
     ) {
         return ok(service.save(dto));
+    }
+
+    @GetMapping("/type/{transactionType}")
+    public ResponseEntity<List<Transaction>> findByTransactionType(
+        @PathVariable TransactionType transactionType
+    ) {
+        return ok(service.findByTransactionType(transactionType));
     }
 }

@@ -5,12 +5,16 @@ import com.budgetmanager.bm.domain.dtos.TransactionDto;
 import com.budgetmanager.bm.domain.entities.Installment;
 import com.budgetmanager.bm.domain.entities.Transaction;
 import com.budgetmanager.bm.domain.entities.User;
+import com.budgetmanager.bm.enums.RepeatInterval;
+import com.budgetmanager.bm.enums.TransactionType;
+import com.budgetmanager.bm.exceptions.GlobalException;
 import com.budgetmanager.bm.repositories.TransactionRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +27,20 @@ public class TransactionService {
     private final InstallmentService installmentService;
     private final UserService userService;
 
+    public List<Transaction> findByTransactionType(
+        TransactionType transactionType
+    ) {
+        return repository.findAllWithCategoryByUserAndType(
+            userService
+                .getCurrentUser()
+                .orElseThrow(() ->
+                    new UsernameNotFoundException("User not found")
+                )
+                .getId(),
+            transactionType
+        );
+    }
+
     @Transactional
     public TransactionDto save(TransactionDto dto) {
         User user = userService
@@ -34,6 +52,12 @@ public class TransactionService {
         newTransaction = repository.save(newTransaction);
 
         if (dto.installmentNumbers() != null) {
+            if (!dto.repeats().equals(RepeatInterval.NONE)) {
+                throw new GlobalException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Transaction cannot have installments and repeat interval at the same time"
+                );
+            }
             handleInstallments(newTransaction);
         }
         return TransactionConverter.entityToDto(newTransaction);
