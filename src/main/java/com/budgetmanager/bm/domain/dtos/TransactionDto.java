@@ -21,6 +21,6 @@ public record TransactionDto(
     Integer installmentNumbers,
     List<InstallmentDto> installments,
     RepeatInterval repeats,
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
     LocalDate date
 ) {}

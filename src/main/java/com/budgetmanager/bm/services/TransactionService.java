@@ -9,15 +9,18 @@ import com.budgetmanager.bm.enums.RepeatInterval;
 import com.budgetmanager.bm.enums.TransactionType;
 import com.budgetmanager.bm.exceptions.GlobalException;
 import com.budgetmanager.bm.repositories.TransactionRepository;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,22 +30,39 @@ public class TransactionService {
     private final InstallmentService installmentService;
     private final UserService userService;
 
-    public List<Transaction> findByTransactionType(
-        TransactionType transactionType
+    public List<Transaction> findByTransactionTypeAndDateBetween(
+        TransactionType transactionType,
+        LocalDate startDate,
+        LocalDate endDate
     ) {
-        return repository.findAllWithCategoryByUserAndType(
-            userService
-                .getCurrentUser()
-                .orElseThrow(() ->
-                    new UsernameNotFoundException("User not found")
-                )
-                .getId(),
-            transactionType
+        UUID id = userService
+            .getCurrentUser()
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"))
+            .getId();
+
+        return repository.findAllWithCategoryByUserAndTypeAndDateBetween(
+            id,
+            transactionType,
+            startDate,
+            endDate
         );
+    }
+
+    public void deleteById(UUID id) {
+        repository.deleteById(id);
     }
 
     @Transactional
     public TransactionDto save(TransactionDto dto) {
+        if (
+            dto.installmentNumbers() != null &&
+                !dto.repeats().equals(RepeatInterval.NONE)
+        ) {
+            throw new GlobalException(
+                HttpStatus.BAD_REQUEST,
+                "Transaction cannot repeat and have installments"
+            );
+        }
         User user = userService
             .getCurrentUser()
             .orElseThrow(() -> new UsernameNotFoundException("User Not Found"));
@@ -52,18 +72,12 @@ public class TransactionService {
         newTransaction = repository.save(newTransaction);
 
         if (dto.installmentNumbers() != null) {
-            if (!dto.repeats().equals(RepeatInterval.NONE)) {
-                throw new GlobalException(
-                    HttpStatus.BAD_GATEWAY,
-                    "Transaction cannot have installments and repeat interval at the same time"
-                );
-            }
             handleInstallments(newTransaction);
         }
         return TransactionConverter.entityToDto(newTransaction);
     }
 
-    public void handleInstallments(Transaction transaction) {
+    private void handleInstallments(Transaction transaction) {
         List<Installment> installments = new ArrayList<>();
         BigDecimal installmentAmount = calculateInstallmentAmount(transaction);
 
@@ -74,7 +88,7 @@ public class TransactionService {
                     .installmentNumber(i)
                     .totalInstallments(transaction.getInstallmentNumbers())
                     .amount(installmentAmount)
-                    .dueDate(transaction.getDate().plusMonths(i - 1))
+                    .dueDate(transaction.getDate().plusMonths((long) i - 1))
                     .build()
             );
         }
@@ -86,7 +100,8 @@ public class TransactionService {
             .getTotalValue()
             .divide(
                 BigDecimal.valueOf(transaction.getInstallmentNumbers()),
-                RoundingMode.HALF_UP
+                2,
+                RoundingMode.UP
             );
     }
 }
