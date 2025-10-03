@@ -9,18 +9,17 @@ import com.budgetmanager.bm.enums.RepeatInterval;
 import com.budgetmanager.bm.enums.TransactionType;
 import com.budgetmanager.bm.exceptions.GlobalException;
 import com.budgetmanager.bm.repositories.TransactionRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +55,7 @@ public class TransactionService {
     public TransactionDto save(TransactionDto dto) {
         if (
             dto.installmentNumbers() != null &&
-                !dto.repeats().equals(RepeatInterval.NONE)
+            !dto.repeats().equals(RepeatInterval.NONE)
         ) {
             throw new GlobalException(
                 HttpStatus.BAD_REQUEST,

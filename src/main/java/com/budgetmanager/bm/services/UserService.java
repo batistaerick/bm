@@ -6,10 +6,10 @@ import com.budgetmanager.bm.domain.entities.User;
 import com.budgetmanager.bm.enums.UserRole;
 import com.budgetmanager.bm.exceptions.GlobalException;
 import com.budgetmanager.bm.repositories.UserRepository;
+import com.budgetmanager.bm.utils.Checkers;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -27,13 +27,7 @@ public class UserService {
     private final RoleService roleService;
 
     public User save(UserDto userDto) {
-        if (
-            !Pattern.compile(
-                "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&.])[A-Za-z\\d@$!%*?&.]{8,20}$"
-            )
-                .matcher(userDto.password())
-                .matches()
-        ) {
+        if (!Checkers.isPasswordCorrect(userDto.password())) {
             throw new GlobalException(
                 HttpStatus.BAD_REQUEST,
                 "Password must be 8-20 characters, include uppercase, lowercase, digit, and special character"
@@ -49,6 +43,31 @@ public class UserService {
         user.setPassword(encoder.encode(user.getPassword()));
 
         return repository.save(user);
+    }
+
+    public void updateUser(UserDto dto) {
+        User updatedUser = getCurrentUser().orElseThrow(() ->
+            new UsernameNotFoundException("User not found")
+        );
+        if (dto.name() != null && !dto.name().isBlank()) {
+            updatedUser.setName(dto.name());
+        }
+        if (dto.password() != null && !dto.password().isBlank()) {
+            if (!Checkers.isPasswordCorrect(dto.password())) {
+                throw new GlobalException(
+                    HttpStatus.BAD_REQUEST,
+                    "Password must be 8-20 characters, include uppercase, lowercase, digit, and special character"
+                );
+            }
+            if (encoder.matches(dto.password(), updatedUser.getPassword())) {
+                throw new GlobalException(
+                    HttpStatus.BAD_REQUEST,
+                    "Password must be different from before"
+                );
+            }
+            updatedUser.setPassword(encoder.encode(dto.password()));
+        }
+        repository.save(updatedUser);
     }
 
     public Optional<User> findByEmail(String email) {

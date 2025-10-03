@@ -1,20 +1,19 @@
 package com.budgetmanager.bm.controllers;
 
+import static org.springframework.http.ResponseEntity.noContent;
+import static org.springframework.http.ResponseEntity.ok;
+
 import com.budgetmanager.bm.domain.dtos.TransactionDto;
 import com.budgetmanager.bm.domain.entities.Transaction;
 import com.budgetmanager.bm.enums.TransactionType;
 import com.budgetmanager.bm.services.TransactionService;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
-
-import static org.springframework.http.ResponseEntity.noContent;
-import static org.springframework.http.ResponseEntity.ok;
 
 @RestController
 @RequestMapping("/transactions")
@@ -33,7 +32,7 @@ public class TransactionController {
     @GetMapping
     public ResponseEntity<
         List<Transaction>
-        > findByTransactionTypeAndDateBetween(
+    > findByTransactionTypeAndDateBetween(
         @RequestParam TransactionType transactionType,
         @RequestParam @DateTimeFormat(
             pattern = "yyyy/MM/dd"
