@@ -1,12 +1,13 @@
 package com.budgetmanager.bm.controllers;
 
-import static org.springframework.http.ResponseEntity.noContent;
-import static org.springframework.http.ResponseEntity.ok;
+import static org.springframework.http.ResponseEntity.*;
 
+import com.budgetmanager.bm.converters.TransactionConverter;
 import com.budgetmanager.bm.domain.dtos.TransactionDto;
 import com.budgetmanager.bm.domain.entities.Transaction;
 import com.budgetmanager.bm.enums.TransactionType;
 import com.budgetmanager.bm.services.TransactionService;
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/transactions")
@@ -26,7 +28,14 @@ public class TransactionController {
     public ResponseEntity<TransactionDto> save(
         @RequestBody TransactionDto dto
     ) {
-        return ok(service.save(dto));
+        Transaction transaction = service.save(dto);
+
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+            .path("/{id}")
+            .buildAndExpand(transaction.getId())
+            .toUri();
+
+        return created(uri).body(TransactionConverter.entityToDto(transaction));
     }
 
     @GetMapping
@@ -46,6 +55,13 @@ public class TransactionController {
                 endDate
             )
         );
+    }
+
+    @PutMapping
+    public ResponseEntity<TransactionDto> update(
+        @RequestBody TransactionDto dto
+    ) {
+        return ok(TransactionConverter.entityToDto(service.update(dto)));
     }
 
     @DeleteMapping("/{id}")

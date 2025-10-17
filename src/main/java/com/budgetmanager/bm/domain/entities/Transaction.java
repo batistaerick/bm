@@ -61,7 +61,7 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     private RepeatInterval repeats;
 
-    @NotNull
+    @NotNull(message = "Date must not be null")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
     private LocalDate date;
 

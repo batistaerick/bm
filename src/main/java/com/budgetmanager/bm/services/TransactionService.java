@@ -52,7 +52,20 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionDto save(TransactionDto dto) {
+    public Transaction update(TransactionDto updatedTransaction) {
+        User user = userService
+            .getCurrentUser()
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        Transaction transaction = TransactionConverter.dtoToEntity(
+            updatedTransaction
+        );
+        transaction.setUser(user);
+
+        return repository.save(transaction);
+    }
+
+    @Transactional
+    public Transaction save(TransactionDto dto) {
         if (
             dto.installmentNumbers() != null &&
             !dto.repeats().equals(RepeatInterval.NONE)
@@ -73,7 +86,7 @@ public class TransactionService {
         if (dto.installmentNumbers() != null) {
             handleInstallments(newTransaction);
         }
-        return TransactionConverter.entityToDto(newTransaction);
+        return newTransaction;
     }
 
     private void handleInstallments(Transaction transaction) {
