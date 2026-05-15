@@ -39,10 +39,10 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
     @Value("${jwt.refresh-expiration}")
-    private int refreshExpiration;
+    private long refreshExpiration;
 
     @Value("${jwt.access-expiration}")
-    private int accessExpiration;
+    private long accessExpiration;
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(
@@ -154,11 +154,11 @@ public class AuthController {
     private void cookieHelper(
         HttpServletResponse response,
         Cookie cookie,
-        int maxAge
+        long maxAge
     ) {
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setMaxAge(maxAge / 1000);
+        cookie.setMaxAge(Math.toIntExact(maxAge / 1000));
         cookie.setSecure(true);
         response.addCookie(cookie);
     }

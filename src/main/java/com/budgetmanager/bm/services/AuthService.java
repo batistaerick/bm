@@ -22,7 +22,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     @Value("${jwt.refresh-expiration}")
-    private int refreshExpiration;
+    private long refreshExpiration;
 
     public String loginAndCreateAccessToken(String email, String password) {
         User user = userService
