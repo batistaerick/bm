@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:bm-test;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+jwt:
+  secret: test-secret
+  access-expiration: 86400000
+  refresh-expiration: 604800000
+
+cors:
+  frontend: http://localhost:3000

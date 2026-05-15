@@ -14,6 +14,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -22,8 +23,22 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Log4j2
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+    private static final String ACCESS_COOKIE_NAME = "access_token";
+    private static final String BEARER_PREFIX = "Bearer ";
+
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return (
+            "/auth/login".equals(path) ||
+            "/auth/refresh".equals(path) ||
+            "/auth/logout".equals(path) ||
+            "/auth/csrf".equals(path)
+        );
+    }
 
     @Override
     protected void doFilterInternal(
@@ -34,11 +49,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String header = req.getHeader("Authorization");
         String token = null;
 
-        if (header != null && header.startsWith("Bearer ")) {
-            token = header.substring(7);
+        if (header != null && header.startsWith(BEARER_PREFIX)) {
+            token = header.substring(BEARER_PREFIX.length());
         } else if (req.getCookies() != null) {
             for (Cookie cookie : req.getCookies()) {
-                if ("access_token".equals(cookie.getName())) {
+                if (ACCESS_COOKIE_NAME.equals(cookie.getName())) {
                     token = cookie.getValue();
                     break;
                 }
@@ -56,16 +71,28 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 ) {
                     UserDetails userDetails =
                         customUserDetailsService.loadUserByUsername(username);
-                    SecurityContextHolder.getContext().setAuthentication(
+                    UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
                             userDetails.getAuthorities()
-                        )
+                        );
+                    authentication.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(req)
                     );
+
+                    var context = SecurityContextHolder.createEmptyContext();
+                    context.setAuthentication(authentication);
+                    SecurityContextHolder.setContext(context);
                 }
             } catch (Exception exception) {
-                log.error("Token invalid/expired", exception);
+                SecurityContextHolder.clearContext();
+                log.warn("Token invalid/expired: {}", exception.getMessage());
+                res.sendError(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Invalid or expired access token"
+                );
+                return;
             }
         }
         chain.doFilter(req, res);

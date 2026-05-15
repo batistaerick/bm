@@ -8,7 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface RefreshTokenRepository
-    extends JpaRepository<RefreshToken, UUID> {
+    extends JpaRepository<RefreshToken, UUID>
+{
     Optional<RefreshToken> findByToken(String token);
 
     Optional<RefreshToken> findByUser(User user);

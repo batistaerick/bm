@@ -99,6 +99,111 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>install-git-hooks</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <inherited>false</inherited>
+                        <configuration>
+                            <target>
+                                <echo message="Configuring git hooks path to use .githooks (Root Only)"/>
+                                <exec dir="${project.basedir}" executable="git" failonerror="false">
+                                    <arg value="config"/>
+                                    <arg value="core.hooksPath"/>
+                                    <arg value=".githooks"/>
+                                </exec>
+                                <echo message="Configuring git blame ignore revs file"/>
+                                <exec dir="${project.basedir}" executable="git" failonerror="false">
+                                    <arg value="config"/>
+                                    <arg value="blame.ignoreRevsFile"/>
+                                    <arg value=".git-blame-ignore-revs"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>print-coverage-summary</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <target>
+                                <exec executable="python3" failonerror="false">
+                                    <arg value="${maven.multiModuleProjectDirectory}/scripts/print-coverage.py"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <java>
+                        <includes>
+                            <include>src/main/java/**/*.java</include>
+                            <include>src/test/java/**/*.java</include>
+                        </includes>
+                        <prettier>
+                            <devDependencies>
+                                <prettier>3.8.0</prettier>
+                                <prettier-plugin-java>2.8.1</prettier-plugin-java>
+                            </devDependencies>
+                            <config>
+                                <tabWidth>4</tabWidth>
+                                <parser>java</parser>
+                                <plugins>prettier-plugin-java</plugins>
+                            </config>
+                        </prettier>
+                        <removeUnusedImports/>
+                        <trimTrailingWhitespace/>
+                        <endWithNewline/>
+                    </java>
+                    <formats>
+                        <format>
+                            <includes>
+                                <include>**/*.json</include>
+                                <include>**/*.yml</include>
+                                <include>**/*.yaml</include>
+                                <include>**/*.md</include>
+                                <include>**/*.html</include>
+                                <include>**/*.css</include>
+                                <include>**/*.js</include>
+                                <include>**/*.ts</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/target/**</exclude>
+                                <exclude>**/node_modules/**</exclude>
+                                <exclude>**/dist/**</exclude>
+                                <exclude>**/build/**</exclude>
+                            </excludes>
+                            <prettier>
+                                <devDependencies>
+                                    <prettier>3.8.0</prettier>
+                                </devDependencies>
+                                <config>
+                                    <tabWidth>2</tabWidth>
+                                    <printWidth>100</printWidth>
+                                    <singleQuote>false</singleQuote>
+                                    <trailingComma>none</trailingComma>
+                                </config>
+                            </prettier>
+                            <trimTrailingWhitespace/>
+                            <endWithNewline/>
+                        </format>
+                    </formats>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

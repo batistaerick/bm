@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -e
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG="$(cat "$COMMIT_MSG_FILE")"
+
+########################################
+# Configuration
+########################################
+
+COMMIT_REGEX="^(feat|fix|perf|docs|style|refactor|test|build|ci|chore)(\([a-zA-Z0-9_-]+\))?(!)?: .+"
+
+########################################
+# Allow merge commits
+########################################
+
+if [[ "$COMMIT_MSG" =~ ^Merge\ .* ]]; then
+  exit 0
+fi
+
+########################################
+# Allow revert/rebase/squash commits
+########################################
+
+if [[ "$COMMIT_MSG" =~ ^(Revert|fixup!|squash!) ]]; then
+  exit 0
+fi
+
+########################################
+# Semantic commit validation
+########################################
+
+if [[ ! "$COMMIT_MSG" =~ $COMMIT_REGEX ]]; then
+  echo "❌ Invalid commit message format"
+  echo ""
+  echo "Allowed formats:"
+  echo "  feat(api): add endpoint"
+  echo "  fix(auth): prevent null pointer"
+  echo "  perf(cache): improve query speed"
+  echo "  docs(readme): update installation steps"
+  echo "  style(ui): format code"
+  echo "  refactor(core): simplify service logic"
+  echo "  test(api): add integration tests"
+  echo "  build(docker): update base image"
+  echo "  ci(github): add workflow"
+  echo "  chore: update dependencies"
+  echo "  feat(core)!: breaking change"
+  echo ""
+  echo "Merge, revert, fixup, and squash commits are allowed automatically."
+  exit 1
+fi
+
+exit 0

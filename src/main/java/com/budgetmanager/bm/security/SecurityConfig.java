@@ -10,10 +10,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -35,6 +38,11 @@ public class SecurityConfig {
                 registry
                     .addMapping("/**")
                     .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE")
+                    .allowedHeaders(
+                        "Authorization",
+                        "Content-Type",
+                        "X-XSRF-TOKEN"
+                    )
                     .allowedOrigins(url)
                     .allowCredentials(true);
             }
@@ -45,10 +53,34 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
             .cors(withDefaults())
-            .csrf(AbstractHttpConfigurer::disable)
+            .csrf(csrf ->
+                csrf
+                    .csrfTokenRepository(
+                        CookieCsrfTokenRepository.withHttpOnlyFalse()
+                    )
+                    .ignoringRequestMatchers(
+                        PathPatternRequestMatcher.pathPattern("/auth/login"),
+                        PathPatternRequestMatcher.pathPattern("/auth/refresh"),
+                        PathPatternRequestMatcher.pathPattern("/auth/logout"),
+                        PathPatternRequestMatcher.pathPattern("/auth/csrf"),
+                        PathPatternRequestMatcher.pathPattern(
+                            HttpMethod.POST,
+                            "/users"
+                        )
+                    )
+            )
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
             .authorizeHttpRequests(authorization ->
                 authorization
                     .requestMatchers("/auth/login")
+                    .permitAll()
+                    .requestMatchers("/auth/refresh")
+                    .permitAll()
+                    .requestMatchers("/auth/logout")
+                    .permitAll()
+                    .requestMatchers("/auth/csrf")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/users")
                     .permitAll()
@@ -63,7 +95,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

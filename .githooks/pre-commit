@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -e
+
+########################################
+# Branch name validation
+########################################
+
+BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+
+BRANCH_REGEX="^(main|master|develop|production|((feat|fix|hotfix|bugfix|release|refactor|chore|docs|test|ci|build|perf)/[a-z0-9._-]+))$"
+
+if [[ ! "$BRANCH_NAME" =~ $BRANCH_REGEX ]]; then
+  echo "❌ Invalid branch name: $BRANCH_NAME"
+  echo ""
+  echo "Allowed formats:"
+  echo "  feat/small-description"
+  echo "  fix/login-error"
+  echo "  hotfix/prod-crash"
+  echo "  bugfix/budget-calculation"
+  echo "  release/v1.0.0"
+  echo "  refactor/transaction-service"
+  echo "  chore/update-dependencies"
+  echo "  docs/update-readme"
+  echo ""
+  echo "Also allowed:"
+  echo "  main"
+  echo "  master"
+  echo "  develop"
+  echo "  production"
+  exit 1
+fi
+
+########################################
+# Formatting staged files
+########################################
+
+ROOT=$(git rev-parse --show-toplevel)
+
+FILES=()
+
+while IFS= read -r -d '' f; do
+  case "$f" in
+    *.java|pom.xml|*/pom.xml|*.yml|*.yaml|*.json)
+      FILES+=("$f")
+      ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=ACM -z)
+
+if [ ${#FILES[@]} -eq 0 ]; then
+  echo "No staged Spotless-supported files to format."
+  exit 0
+fi
+
+ABS_FILES=""
+for f in "${FILES[@]}"; do
+  ABS_FILES+="$ROOT/$f,"
+done
+ABS_FILES=${ABS_FILES%,}
+
+########################################
+# Detect Maven command
+########################################
+
+if [ -x "$ROOT/mvnw" ]; then
+  MVN_CMD="$ROOT/mvnw"
+elif [ -x "$ROOT/mvnw.cmd" ]; then
+  MVN_CMD="$ROOT/mvnw.cmd"
+else
+  MVN_CMD="mvn"
+fi
+
+echo "Formatting staged files"
+"$MVN_CMD" -q spotless:apply -DspotlessFiles="$ABS_FILES"
+
+########################################
+# Re-stage formatted files
+########################################
+
+git add "${FILES[@]}"

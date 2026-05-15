@@ -9,7 +9,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,7 +18,7 @@ public class AuthService {
 
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     @Value("${jwt.refresh-expiration}")
@@ -29,9 +29,8 @@ public class AuthService {
             .findByEmail(email)
             .orElseThrow(() ->
                 new GlobalException(
-                    HttpStatus.NOT_FOUND,
-                    "User not found for {}",
-                    email
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid credentials"
                 )
             );
 
@@ -90,5 +89,13 @@ public class AuthService {
 
     public void revokeRefreshTokenForUser(User user) {
         refreshTokenService.deleteByUser(user);
+    }
+
+    public void revokeRefreshToken(String token) {
+        refreshTokenService
+            .findByToken(token)
+            .ifPresent(refreshToken ->
+                refreshTokenService.deleteByUser(refreshToken.getUser())
+            );
     }
 }

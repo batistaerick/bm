@@ -48,7 +48,20 @@ public class TransactionService {
     }
 
     public void deleteById(UUID id) {
-        repository.deleteById(id);
+        User user = userService
+            .getCurrentUser()
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        Transaction transaction = repository
+            .findByIdAndUserId(id, user.getId())
+            .orElseThrow(() ->
+                new GlobalException(
+                    HttpStatus.NOT_FOUND,
+                    "Transaction not found for {}",
+                    id
+                )
+            );
+
+        repository.delete(transaction);
     }
 
     @Transactional
@@ -56,6 +69,24 @@ public class TransactionService {
         User user = userService
             .getCurrentUser()
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (updatedTransaction.id() == null) {
+            throw new GlobalException(
+                HttpStatus.BAD_REQUEST,
+                "Transaction id is required"
+            );
+        }
+
+        repository
+            .findByIdAndUserId(updatedTransaction.id(), user.getId())
+            .orElseThrow(() ->
+                new GlobalException(
+                    HttpStatus.NOT_FOUND,
+                    "Transaction not found for {}",
+                    updatedTransaction.id()
+                )
+            );
+
         Transaction transaction = TransactionConverter.dtoToEntity(
             updatedTransaction
         );

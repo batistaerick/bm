@@ -13,18 +13,17 @@ import com.budgetmanager.bm.services.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.Duration;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -66,15 +65,16 @@ public class AuthController {
 
         cookieHelper(
             response,
-            new Cookie(REFRESH_COOKIE_NAME, refreshToken.getToken()),
+            REFRESH_COOKIE_NAME,
+            refreshToken.getToken(),
             refreshExpiration
         );
         cookieHelper(
             response,
-            new Cookie(ACCESS_COOKIE_NAME, accessToken),
+            ACCESS_COOKIE_NAME,
+            accessToken,
             accessExpiration
         );
-
         return ok(Map.of("message", "Logged in"));
     }
 
@@ -116,14 +116,11 @@ public class AuthController {
 
         cookieHelper(
             response,
-            new Cookie(REFRESH_COOKIE_NAME, newRefreshToken.getToken()),
+            REFRESH_COOKIE_NAME,
+            newRefreshToken.getToken(),
             refreshExpiration
         );
-        cookieHelper(
-            response,
-            new Cookie(ACCESS_COOKIE_NAME, newAccess),
-            accessExpiration
-        );
+        cookieHelper(response, ACCESS_COOKIE_NAME, newAccess, accessExpiration);
 
         return ok(Map.of("message", "Refreshed"));
     }
@@ -133,33 +130,49 @@ public class AuthController {
         HttpServletRequest request,
         HttpServletResponse response
     ) {
-        Authentication authentication =
-            SecurityContextHolder.getContext().getAuthentication();
+        String refreshToken = getCookieValue(request, REFRESH_COOKIE_NAME);
 
-        if (authentication == null || authentication.getName() == null) {
-            return status(HttpStatus.UNAUTHORIZED).body(
-                "No authenticated user"
-            );
+        if (refreshToken != null) {
+            authService.revokeRefreshToken(refreshToken);
         }
-        userService
-            .findByEmail(authentication.getName())
-            .ifPresent(authService::revokeRefreshTokenForUser);
 
-        cookieHelper(response, new Cookie(REFRESH_COOKIE_NAME, ""), 0);
-        cookieHelper(response, new Cookie(ACCESS_COOKIE_NAME, ""), 0);
+        cookieHelper(response, REFRESH_COOKIE_NAME, "", 0);
+        cookieHelper(response, ACCESS_COOKIE_NAME, "", 0);
 
         return ok(Map.of("message", "Logged out"));
     }
 
+    @GetMapping("/csrf")
+    public ResponseEntity<Map<String, String>> csrf(CsrfToken csrfToken) {
+        return ok(Map.of("token", csrfToken.getToken()));
+    }
+
     private void cookieHelper(
         HttpServletResponse response,
-        Cookie cookie,
+        String name,
+        String value,
         long maxAge
     ) {
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(Math.toIntExact(maxAge / 1000));
-        cookie.setSecure(true);
-        response.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from(name, value)
+            .httpOnly(true)
+            .secure(true)
+            .path("/")
+            .sameSite("Lax")
+            .maxAge(Duration.ofMillis(maxAge))
+            .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    private String getCookieValue(HttpServletRequest request, String name) {
+        if (request.getCookies() == null) {
+            return null;
+        }
+        for (Cookie cookie : request.getCookies()) {
+            if (name.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 }
