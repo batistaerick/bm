@@ -30,6 +30,7 @@ public class TransactionService {
     private final UserService userService;
     private final CategoryService categoryService;
 
+    @Transactional(readOnly = true)
     public List<Transaction> findByTransactionTypeAndDateBetween(
         TransactionType transactionType,
         LocalDate startDate,

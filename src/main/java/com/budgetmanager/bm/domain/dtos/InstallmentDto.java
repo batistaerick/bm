@@ -13,6 +13,6 @@ public record InstallmentDto(
     Integer installmentNumber,
     Integer totalInstallments,
     BigDecimal amount,
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
     LocalDate dueDate
 ) {}

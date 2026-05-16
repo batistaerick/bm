@@ -41,7 +41,7 @@ public class TransactionController {
 
     @GetMapping
     public ResponseEntity<
-        List<Transaction>
+        List<TransactionDto>
     > findByTransactionTypeAndDateBetween(
         @RequestParam TransactionType transactionType,
         @RequestParam @DateTimeFormat(
@@ -50,11 +50,15 @@ public class TransactionController {
         @RequestParam @DateTimeFormat(pattern = "yyyy/MM/dd") LocalDate endDate
     ) {
         return ok(
-            service.findByTransactionTypeAndDateBetween(
-                transactionType,
-                startDate,
-                endDate
-            )
+            service
+                .findByTransactionTypeAndDateBetween(
+                    transactionType,
+                    startDate,
+                    endDate
+                )
+                .stream()
+                .map(TransactionConverter::entityToDto)
+                .toList()
         );
     }
 

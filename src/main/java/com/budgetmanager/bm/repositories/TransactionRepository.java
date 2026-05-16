@@ -20,7 +20,7 @@ public interface TransactionRepository
             SELECT DISTINCT t
             FROM Transaction t
             JOIN FETCH t.category c
-            LEFT JOIN t.installments i
+            LEFT JOIN FETCH t.installments i
             WHERE t.user.id = :userId
               AND t.category.transactionType = :type
               AND (
