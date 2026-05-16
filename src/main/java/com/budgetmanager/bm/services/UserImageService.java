@@ -93,6 +93,13 @@ public class UserImageService {
             .orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE);
     }
 
+    @Transactional
+    public void deleteUserImage() {
+        repository
+            .findByUserEmail(userService.getCurrentUsername())
+            .ifPresent(repository::delete);
+    }
+
     private void validateImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new GlobalException(

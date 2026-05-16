@@ -34,4 +34,10 @@ public class UserImageController {
             )
             .body(image);
     }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteUserImage() {
+        service.deleteUserImage();
+        return noContent().build();
+    }
 }
