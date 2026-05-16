@@ -2,6 +2,7 @@ package com.budgetmanager.bm.controllers;
 
 import static org.springframework.http.ResponseEntity.created;
 import static org.springframework.http.ResponseEntity.ok;
+import static org.springframework.http.ResponseEntity.status;
 
 import com.budgetmanager.bm.converters.CategoryConverter;
 import com.budgetmanager.bm.domain.dtos.CategoryDto;
@@ -12,6 +13,7 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -35,6 +37,19 @@ public class CategoryController {
             .toUri();
 
         return created(uri).body(CategoryConverter.entityToDto(category));
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<List<CategoryDto>> saveAll(
+        @Valid @RequestBody List<@Valid CategoryDto> dtos
+    ) {
+        List<CategoryDto> categories = service
+            .saveAll(dtos)
+            .stream()
+            .map(CategoryConverter::entityToDto)
+            .toList();
+
+        return status(HttpStatus.CREATED).body(categories);
     }
 
     @GetMapping("/type/{transactionType}")
