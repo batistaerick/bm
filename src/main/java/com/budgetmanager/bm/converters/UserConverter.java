@@ -40,7 +40,7 @@ public class UserConverter {
                 .map(RoleConverter::dtoToEntity)
                 .collect(Collectors.toSet());
         }
-        return Set.of(new Role());
+        return Set.of();
     }
 
     public static Set<RoleDto> checkRoles(User user) {
@@ -51,6 +51,6 @@ public class UserConverter {
                 .map(RoleConverter::entityToDto)
                 .collect(Collectors.toSet());
         }
-        return Set.of(RoleDto.builder().build());
+        return Set.of();
     }
 }

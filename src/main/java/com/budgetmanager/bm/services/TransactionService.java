@@ -28,6 +28,7 @@ public class TransactionService {
     private final TransactionRepository repository;
     private final InstallmentService installmentService;
     private final UserService userService;
+    private final CategoryService categoryService;
 
     public List<Transaction> findByTransactionTypeAndDateBetween(
         TransactionType transactionType,
@@ -87,8 +88,21 @@ public class TransactionService {
                 )
             );
 
+        validateTransaction(updatedTransaction);
+
         Transaction transaction = TransactionConverter.dtoToEntity(
-            updatedTransaction
+            normalize(updatedTransaction)
+        );
+        transaction.setCategory(
+            categoryService
+                .findById(updatedTransaction.category().id())
+                .orElseThrow(() ->
+                    new GlobalException(
+                        HttpStatus.NOT_FOUND,
+                        "Category not found for {}",
+                        updatedTransaction.category().id()
+                    )
+                )
         );
         transaction.setUser(user);
 
@@ -97,21 +111,26 @@ public class TransactionService {
 
     @Transactional
     public Transaction save(TransactionDto dto) {
-        if (
-            dto.installmentNumbers() != null &&
-            !dto.repeats().equals(RepeatInterval.NONE)
-        ) {
-            throw new GlobalException(
-                HttpStatus.BAD_REQUEST,
-                "Transaction cannot repeat and have installments"
-            );
-        }
+        validateTransaction(dto);
         User user = userService
             .getCurrentUser()
             .orElseThrow(() -> new UsernameNotFoundException("User Not Found"));
-        Transaction newTransaction = TransactionConverter.dtoToEntity(dto);
+        Transaction newTransaction = TransactionConverter.dtoToEntity(
+            normalize(dto)
+        );
 
         newTransaction.setUser(user);
+        newTransaction.setCategory(
+            categoryService
+                .findById(dto.category().id())
+                .orElseThrow(() ->
+                    new GlobalException(
+                        HttpStatus.NOT_FOUND,
+                        "Category not found for {}",
+                        dto.category().id()
+                    )
+                )
+        );
         newTransaction = repository.save(newTransaction);
 
         if (dto.installmentNumbers() != null) {
@@ -146,5 +165,38 @@ public class TransactionService {
                 2,
                 RoundingMode.UP
             );
+    }
+
+    private void validateTransaction(TransactionDto dto) {
+        if (dto.category() == null || dto.category().id() == null) {
+            throw new GlobalException(
+                HttpStatus.BAD_REQUEST,
+                "Category id is required"
+            );
+        }
+        if (
+            dto.installmentNumbers() != null &&
+            normalize(dto).repeats() != RepeatInterval.NONE
+        ) {
+            throw new GlobalException(
+                HttpStatus.BAD_REQUEST,
+                "Transaction cannot repeat and have installments"
+            );
+        }
+    }
+
+    private TransactionDto normalize(TransactionDto dto) {
+        return TransactionDto.builder()
+            .id(dto.id())
+            .category(dto.category())
+            .notes(dto.notes())
+            .totalValue(dto.totalValue())
+            .installmentNumbers(dto.installmentNumbers())
+            .installments(null)
+            .repeats(
+                dto.repeats() == null ? RepeatInterval.NONE : dto.repeats()
+            )
+            .date(dto.date())
+            .build();
     }
 }

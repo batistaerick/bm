@@ -7,6 +7,7 @@ import com.budgetmanager.bm.domain.dtos.TransactionDto;
 import com.budgetmanager.bm.domain.entities.Transaction;
 import com.budgetmanager.bm.enums.TransactionType;
 import com.budgetmanager.bm.services.TransactionService;
+import jakarta.validation.Valid;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
@@ -26,7 +27,7 @@ public class TransactionController {
 
     @PostMapping
     public ResponseEntity<TransactionDto> save(
-        @RequestBody TransactionDto dto
+        @Valid @RequestBody TransactionDto dto
     ) {
         Transaction transaction = service.save(dto);
 
@@ -59,7 +60,7 @@ public class TransactionController {
 
     @PutMapping
     public ResponseEntity<TransactionDto> update(
-        @RequestBody TransactionDto dto
+        @Valid @RequestBody TransactionDto dto
     ) {
         return ok(TransactionConverter.entityToDto(service.update(dto)));
     }

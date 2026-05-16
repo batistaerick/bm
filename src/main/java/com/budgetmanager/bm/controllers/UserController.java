@@ -7,6 +7,7 @@ import com.budgetmanager.bm.domain.dtos.UserDto;
 import com.budgetmanager.bm.domain.entities.User;
 import com.budgetmanager.bm.exceptions.GlobalException;
 import com.budgetmanager.bm.services.UserService;
+import jakarta.validation.Valid;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,7 +23,7 @@ public class UserController {
     private final UserService service;
 
     @PostMapping
-    public ResponseEntity<UserDto> save(@RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> save(@Valid @RequestBody UserDto userDto) {
         User user = service.save(userDto);
 
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()

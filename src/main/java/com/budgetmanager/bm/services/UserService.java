@@ -27,6 +27,14 @@ public class UserService {
     private final RoleService roleService;
 
     public User save(UserDto userDto) {
+        repository
+            .findByEmail(userDto.email())
+            .ifPresent(existing -> {
+                throw new GlobalException(
+                    HttpStatus.CONFLICT,
+                    "Email already registered"
+                );
+            });
         if (!Checkers.isPasswordCorrect(userDto.password())) {
             throw new GlobalException(
                 HttpStatus.BAD_REQUEST,

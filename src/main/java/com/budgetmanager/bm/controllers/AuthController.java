@@ -13,6 +13,7 @@ import com.budgetmanager.bm.services.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import java.time.Duration;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +44,12 @@ public class AuthController {
     @Value("${jwt.access-expiration}")
     private long accessExpiration;
 
+    @Value("${cookies.secure:true}")
+    private boolean secureCookies;
+
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(
-        @RequestBody AuthRequest authRequest,
+        @Valid @RequestBody AuthRequest authRequest,
         HttpServletResponse response
     ) {
         String accessToken = authService.loginAndCreateAccessToken(
@@ -155,7 +159,7 @@ public class AuthController {
     ) {
         ResponseCookie cookie = ResponseCookie.from(name, value)
             .httpOnly(true)
-            .secure(true)
+            .secure(secureCookies)
             .path("/")
             .sameSite("Lax")
             .maxAge(Duration.ofMillis(maxAge))

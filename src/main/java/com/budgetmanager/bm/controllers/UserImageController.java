@@ -28,6 +28,10 @@ public class UserImageController {
     @GetMapping
     public ResponseEntity<byte[]> getUserImage() {
         byte[] image = service.findByUserEmail();
-        return ok().contentType(MediaType.IMAGE_JPEG).body(image);
+        return ok()
+            .contentType(
+                MediaType.parseMediaType(service.findContentTypeByUserEmail())
+            )
+            .body(image);
     }
 }

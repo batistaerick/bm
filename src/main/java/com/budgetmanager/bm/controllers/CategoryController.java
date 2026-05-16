@@ -8,6 +8,7 @@ import com.budgetmanager.bm.domain.dtos.CategoryDto;
 import com.budgetmanager.bm.domain.entities.Category;
 import com.budgetmanager.bm.enums.TransactionType;
 import com.budgetmanager.bm.services.CategoryService;
+import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,9 @@ public class CategoryController {
     private final CategoryService service;
 
     @PostMapping
-    public ResponseEntity<CategoryDto> save(@RequestBody CategoryDto dto) {
+    public ResponseEntity<CategoryDto> save(
+        @Valid @RequestBody CategoryDto dto
+    ) {
         Category category = service.save(dto);
 
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()

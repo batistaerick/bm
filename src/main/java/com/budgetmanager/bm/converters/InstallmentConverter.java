@@ -10,16 +10,12 @@ public class InstallmentConverter {
     }
 
     public static InstallmentDto entityToDto(Installment entity) {
-        entity.getTransaction().setInstallments(null);
-
         return InstallmentDto.builder()
             .id(entity.getId())
             .installmentNumber(entity.getInstallmentNumber())
             .totalInstallments(entity.getTotalInstallments())
             .amount(entity.getAmount())
-            .transaction(
-                TransactionConverter.entityToDto(entity.getTransaction())
-            )
+            .dueDate(entity.getDueDate())
             .build();
     }
 
@@ -29,7 +25,7 @@ public class InstallmentConverter {
             .installmentNumber(dto.installmentNumber())
             .totalInstallments(dto.totalInstallments())
             .amount(dto.amount())
-            .transaction(TransactionConverter.dtoToEntity(dto.transaction()))
+            .dueDate(dto.dueDate())
             .build();
     }
 }

@@ -8,6 +8,7 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
 
@@ -21,3 +22,10 @@ jwt:
 
 cors:
   frontend: ${CORS_FRONTEND:http://localhost:3000}
+
+cookies:
+  secure: ${COOKIE_SECURE:true}
+
+app:
+  uploads:
+    max-profile-image-bytes: ${MAX_PROFILE_IMAGE_BYTES:2097152}

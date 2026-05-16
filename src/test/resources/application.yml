@@ -4,13 +4,21 @@ spring:
     username: sa
     password:
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: create-drop
 
 jwt:
-  secret: test-secret
+  secret: test-secret-must-be-at-least-32-bytes
   access-expiration: 86400000
   refresh-expiration: 604800000
 
 cors:
   frontend: http://localhost:3000
+
+cookies:
+  secure: false
+
+app:
+  uploads:
+    max-profile-image-bytes: 2097152
