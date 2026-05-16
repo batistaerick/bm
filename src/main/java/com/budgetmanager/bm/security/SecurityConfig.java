@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -41,6 +42,8 @@ public class SecurityConfig {
                     .allowedHeaders(
                         "Authorization",
                         "Content-Type",
+                        "X-CSRF-Token",
+                        "X-Requested-With",
                         "X-XSRF-TOKEN"
                     )
                     .allowedOrigins(url)
@@ -55,9 +58,7 @@ public class SecurityConfig {
             .cors(withDefaults())
             .csrf(csrf ->
                 csrf
-                    .csrfTokenRepository(
-                        CookieCsrfTokenRepository.withHttpOnlyFalse()
-                    )
+                    .csrfTokenRepository(csrfTokenRepository())
                     .ignoringRequestMatchers(
                         PathPatternRequestMatcher.pathPattern("/auth/login"),
                         PathPatternRequestMatcher.pathPattern("/auth/refresh"),
@@ -97,5 +98,15 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    private CsrfTokenRepository csrfTokenRepository() {
+        CookieCsrfTokenRepository repository =
+            CookieCsrfTokenRepository.withHttpOnlyFalse();
+
+        repository.setCookieName("csrf_token");
+        repository.setHeaderName("X-CSRF-Token");
+
+        return repository;
     }
 }

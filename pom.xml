@@ -119,16 +119,10 @@
                         <configuration>
                             <target>
                                 <echo message="Configuring git hooks path to use .githooks (Root Only)"/>
-                                <exec dir="${project.basedir}" executable="git" failonerror="false">
+                                <exec dir="${project.basedir}" executable="git" failonerror="false" failifexecutionfails="false">
                                     <arg value="config"/>
                                     <arg value="core.hooksPath"/>
                                     <arg value=".githooks"/>
-                                </exec>
-                                <echo message="Configuring git blame ignore revs file"/>
-                                <exec dir="${project.basedir}" executable="git" failonerror="false">
-                                    <arg value="config"/>
-                                    <arg value="blame.ignoreRevsFile"/>
-                                    <arg value=".git-blame-ignore-revs"/>
                                 </exec>
                             </target>
                         </configuration>
