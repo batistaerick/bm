@@ -1,0 +1,547 @@
+{
+  "info": {
+    "_postman_id": "afc70227-8a4b-4d64-9543-bc22eb2b305d",
+    "name": "Budget Manager",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "16761908"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "const method = pm.request.method;",
+          "const path = `/${pm.request.url.getPath().replace(/^\\//, \"\")}`;",
+          "const isUnsafeMethod = ![\"GET\", \"HEAD\", \"OPTIONS\"].includes(method);",
+          "const isCsrfIgnored =",
+          "    path === \"/auth/login\" ||",
+          "    path === \"/auth/refresh\" ||",
+          "    path === \"/auth/logout\" ||",
+          "    path === \"/auth/csrf\" ||",
+          "    (method === \"POST\" && path === \"/users\");",
+          "",
+          "if (isUnsafeMethod && !isCsrfIgnored) {",
+          "    pm.sendRequest(",
+          "        {",
+          "            url: `${pm.variables.get(\"baseURL\").replace(/\\/$/, \"\")}/auth/csrf`,",
+          "            method: \"GET\"",
+          "        },",
+          "        (error, response) => {",
+          "            if (error) {",
+          "                console.error(\"Unable to refresh CSRF token\", error);",
+          "                return;",
+          "            }",
+          "",
+          "            const body = response.json();",
+          "",
+          "            if (body.token) {",
+          "                pm.environment.set(\"csrf_token\", body.token);",
+          "                pm.collectionVariables.set(\"csrf_token\", body.token);",
+          "                pm.request.headers.upsert({ key: \"X-CSRF-Token\", value: body.token });",
+          "                console.log(\"csrf_token refreshed\");",
+          "            } else {",
+          "                console.warn(\"csrf_token not found in /auth/csrf response\");",
+          "            }",
+          "        }",
+          "    );",
+          "}",
+          ""
+        ],
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {}
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "CSRF",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "if (body.token) {",
+                  "    pm.environment.set(\"csrf_token\", body.token);",
+                  "    pm.collectionVariables.set(\"csrf_token\", body.token);",
+                  "    console.log(\"csrf_token saved:\", body.token);",
+                  "} else {",
+                  "    console.warn(\"csrf_token not found in response body\");",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/auth/csrf",
+              "host": ["{{baseURL}}"],
+              "path": ["auth", "csrf"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const setCookieHeaders = pm.response.headers",
+                  "    .all()",
+                  "    .filter((header) => header.key.toLowerCase() === \"set-cookie\")",
+                  "    .map((header) => header.value);",
+                  "",
+                  "function saveCookieValue(cookieName) {",
+                  "    const cookieHeader = setCookieHeaders.find((header) =>",
+                  "        header.startsWith(`${cookieName}=`)",
+                  "    );",
+                  "",
+                  "    if (!cookieHeader) {",
+                  "        console.warn(`${cookieName} cookie not found`);",
+                  "        return;",
+                  "    }",
+                  "",
+                  "    const value = cookieHeader.split(\";\")[0].split(\"=\").slice(1).join(\"=\");",
+                  "",
+                  "    pm.environment.set(cookieName, value);",
+                  "    pm.collectionVariables.set(cookieName, value);",
+                  "    console.log(`${cookieName} saved`);",
+                  "}",
+                  "",
+                  "saveCookieValue(\"access_token\");",
+                  "saveCookieValue(\"refresh_token\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"batista.erick@outlook.com\",\n    \"password\": \"P@ssw0rd\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/login",
+              "host": ["{{baseURL}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const setCookieHeaders = pm.response.headers",
+                  "    .all()",
+                  "    .filter((header) => header.key.toLowerCase() === \"set-cookie\")",
+                  "    .map((header) => header.value);",
+                  "",
+                  "function saveCookieValue(cookieName) {",
+                  "    const cookieHeader = setCookieHeaders.find((header) =>",
+                  "        header.startsWith(`${cookieName}=`)",
+                  "    );",
+                  "",
+                  "    if (!cookieHeader) {",
+                  "        console.warn(`${cookieName} cookie not found`);",
+                  "        return;",
+                  "    }",
+                  "",
+                  "    const value = cookieHeader.split(\";\")[0].split(\"=\").slice(1).join(\"=\");",
+                  "",
+                  "    pm.environment.set(cookieName, value);",
+                  "    pm.collectionVariables.set(cookieName, value);",
+                  "    console.log(`${cookieName} saved`);",
+                  "}",
+                  "",
+                  "saveCookieValue(\"access_token\");",
+                  "saveCookieValue(\"refresh_token\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/auth/refresh",
+              "host": ["{{baseURL}}"],
+              "path": ["auth", "refresh"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/auth/logout",
+              "host": ["{{baseURL}}"],
+              "path": ["auth", "logout"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Category",
+      "item": [
+        {
+          "name": "Bulk",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n    {\n        \"name\": \"Salary\",\n        \"transactionType\": \"INCOME\"\n    },\n    {\n        \"name\": \"Freelance\",\n        \"transactionType\": \"INCOME\"\n    },\n    {\n        \"name\": \"Business Income\",\n        \"transactionType\": \"INCOME\"\n    },\n    {\n        \"name\": \"Investments\",\n        \"transactionType\": \"INCOME\"\n    },\n    {\n        \"name\": \"Interest\",\n        \"transactionType\": \"INCOME\"\n    },\n    {\n        \"name\": \"Dividends\",\n        \"transactionType\": \"INCOME\"\n    },\n    {\n        \"name\": \"Rental Income\",\n        \"transactionType\": \"INCOME\"\n    },\n    {\n        \"name\": \"Bonus\",\n        \"transactionType\": \"INCOME\"\n    },\n    {\n        \"name\": \"Refunds\",\n        \"transactionType\": \"INCOME\"\n    },\n    {\n        \"name\": \"Gifts Received\",\n        \"transactionType\": \"INCOME\"\n    },\n    {\n        \"name\": \"Housing\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Internet\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Financing\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Rent\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Mortgage\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Utilities\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Groceries\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Restaurants\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Transportation\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Fuel\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Public Transit\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Car Maintenance\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Health\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Pharmacy\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Insurance\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Education\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Subscriptions\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Entertainment\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Shopping\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Personal Care\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Travel\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Taxes\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Debt Payments\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Savings\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Investment Contributions\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Gifts & Donations\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Pets\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Childcare\",\n        \"transactionType\": \"EXPENSE\"\n    },\n    {\n        \"name\": \"Miscellaneous\",\n        \"transactionType\": \"EXPENSE\"\n    }\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/categories/bulk",
+              "host": ["{{baseURL}}"],
+              "path": ["categories", "bulk"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Save",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Financing\",\n    \"transactionType\": \"EXPENSE\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/categories",
+              "host": ["{{baseURL}}"],
+              "path": ["categories"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Find All By Transaction Type",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/categories/type/EXPENSE",
+              "host": ["{{baseURL}}"],
+              "path": ["categories", "type", "EXPENSE"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Role",
+      "item": [
+        {
+          "name": "Save",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"roleName\": \"ROLE_ADMIN\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/roles",
+              "host": ["{{baseURL}}"],
+              "path": ["roles"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Transaction",
+      "item": [
+        {
+          "name": "Save",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"notes\": \"\",\n    \"totalValue\": 200,\n    \"installmentNumbers\": 2,\n    \"installments\": null,\n    \"repeats\": \"NONE\",\n    \"date\": \"2025/06/29\",\n    \"category\": {\n        \"id\": \"5a756546-fef7-402b-94d1-532e69900fb5\",\n        \"name\": \"Home Appliances\",\n        \"transactionType\": \"EXPENSE\"\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/transactions",
+              "host": ["{{baseURL}}"],
+              "path": ["transactions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Find By Transaction Type And Date Between",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/transactions?transactionType=EXPENSE&startDate=2025/09/01&endDate=2025/09/30",
+              "host": ["{{baseURL}}"],
+              "path": ["transactions"],
+              "query": [
+                {
+                  "key": "transactionType",
+                  "value": "EXPENSE"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2025/09/01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025/09/30"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Save",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Erick\",\n    \"email\": \"batista.erick@outlook.com\",\n    \"password\": \"P@ssw0rd\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/users",
+              "host": ["{{baseURL}}"],
+              "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Find Current User",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/users/current",
+              "host": ["{{baseURL}}"],
+              "path": ["users", "current"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Current User",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Erick\",\n    \"email\": \"batista.erick@outlook.com\",\n    \"password\": \"P@ssw0rd\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/users",
+              "host": ["{{baseURL}}"],
+              "path": ["users"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "csrf_token",
+      "value": ""
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    }
+  ]
+}

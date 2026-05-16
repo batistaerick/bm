@@ -27,7 +27,7 @@ public interface TransactionRepository
                       (
                           t.installmentNumbers IS NULL
                           AND (
-                              t.repeats <> 'NONE' OR
+                              (t.repeats <> 'NONE' AND t.date <= :endDate) OR
                               (t.date BETWEEN :startDate AND :endDate)
                           )
                       )
