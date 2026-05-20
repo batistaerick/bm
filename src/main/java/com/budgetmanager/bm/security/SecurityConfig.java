@@ -38,7 +38,14 @@ public class SecurityConfig {
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry
                     .addMapping("/**")
-                    .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE")
+                    .allowedMethods(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE",
+                        "OPTIONS"
+                    )
                     .allowedHeaders(
                         "Authorization",
                         "Content-Type",
@@ -75,6 +82,8 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(authorization ->
                 authorization
+                    .requestMatchers(HttpMethod.OPTIONS, "/**")
+                    .permitAll()
                     .requestMatchers("/auth/login")
                     .permitAll()
                     .requestMatchers("/auth/refresh")

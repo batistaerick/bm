@@ -10,9 +10,11 @@ import com.budgetmanager.bm.services.TransactionService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,24 +43,28 @@ public class TransactionController {
 
     @GetMapping
     public ResponseEntity<
-        List<TransactionDto>
+        Page<TransactionDto>
     > findByTransactionTypeAndDateBetween(
         @RequestParam TransactionType transactionType,
         @RequestParam @DateTimeFormat(
             pattern = "yyyy/MM/dd"
         ) LocalDate startDate,
-        @RequestParam @DateTimeFormat(pattern = "yyyy/MM/dd") LocalDate endDate
+        @RequestParam @DateTimeFormat(pattern = "yyyy/MM/dd") LocalDate endDate,
+        @RequestParam(defaultValue = "date") String sortKey,
+        @RequestParam(defaultValue = "asc") String sortOrder,
+        @PageableDefault(size = 30) Pageable pageable
     ) {
         return ok(
             service
                 .findByTransactionTypeAndDateBetween(
                     transactionType,
                     startDate,
-                    endDate
+                    endDate,
+                    sortKey,
+                    sortOrder,
+                    pageable
                 )
-                .stream()
                 .map(TransactionConverter::entityToDto)
-                .toList()
         );
     }
 

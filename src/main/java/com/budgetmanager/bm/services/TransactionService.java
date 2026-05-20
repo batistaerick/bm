@@ -12,10 +12,13 @@ import com.budgetmanager.bm.repositories.TransactionRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -31,22 +34,67 @@ public class TransactionService {
     private final CategoryService categoryService;
 
     @Transactional(readOnly = true)
-    public List<Transaction> findByTransactionTypeAndDateBetween(
+    public Page<Transaction> findByTransactionTypeAndDateBetween(
         TransactionType transactionType,
         LocalDate startDate,
-        LocalDate endDate
+        LocalDate endDate,
+        String sortKey,
+        String sortOrder,
+        Pageable pageable
     ) {
         UUID id = userService
             .getCurrentUser()
             .orElseThrow(() -> new UsernameNotFoundException("User not found"))
             .getId();
+        Page<UUID> transactionIds =
+            repository.findIdsByUserAndTypeAndDateBetween(
+                id,
+                transactionType,
+                startDate,
+                endDate,
+                normalizeSortKey(sortKey),
+                normalizeSortOrder(sortOrder),
+                pageable
+            );
 
-        return repository.findAllWithCategoryByUserAndTypeAndDateBetween(
-            id,
-            transactionType,
-            startDate,
-            endDate
+        if (transactionIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        Map<UUID, Transaction> transactionsById = repository
+            .findAllWithCategoryAndInstallmentsByIdIn(
+                transactionIds.getContent()
+            )
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    Transaction::getId,
+                    Function.identity(),
+                    (left, right) -> left
+                )
+            );
+        List<Transaction> transactions = transactionIds
+            .getContent()
+            .stream()
+            .map(transactionsById::get)
+            .filter(Objects::nonNull)
+            .toList();
+
+        return new PageImpl<>(
+            transactions,
+            pageable,
+            transactionIds.getTotalElements()
         );
+    }
+
+    private String normalizeSortKey(String sortKey) {
+        return switch (sortKey) {
+            case "category", "notes", "date", "value" -> sortKey;
+            default -> "date";
+        };
+    }
+
+    private String normalizeSortOrder(String sortOrder) {
+        return "desc".equalsIgnoreCase(sortOrder) ? "desc" : "asc";
     }
 
     public void deleteById(UUID id) {
